@@ -1,15 +1,15 @@
 package org.platformv1.platformccv1.services;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
-import org.platformv1.platformccv1.dto.LoginRequest;
-import org.platformv1.platformccv1.dto.LoginResponse;
-import org.platformv1.platformccv1.dto.RegisterRequest;
-import org.platformv1.platformccv1.dto.RegisterResponse;
+import org.platformv1.platformccv1.dto.*;
 import org.platformv1.platformccv1.entity.Profile;
 import org.platformv1.platformccv1.entity.User;
 import org.platformv1.platformccv1.repository.ProfileRepository;
 import org.platformv1.platformccv1.repository.UserRepository;
 import org.platformv1.platformccv1.security.JwtService;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -23,6 +23,7 @@ public class UserService  {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final ProfileRepository profileRepository;
+    private final AuthenticationManager authenticationManager;
 
 
     public List<User> getAllUsers(){
@@ -56,10 +57,11 @@ public class UserService  {
         user.setUsername(request.getUsername());
         user.setEmail(request.getEmail());
         user.setPassword(hashedPassword);
-        user.setRole("USER");
+        user.setRole("ROLE_USER");
         user.setCreatedAt(LocalDateTime.now());
 
         User savedUser = userRepository.save(user);
+
         Profile profile = new Profile();
         profile.setUser(savedUser);
         profile.setDisplayName(savedUser.getUsername());
@@ -71,27 +73,58 @@ public class UserService  {
 
         profileRepository.save(profile);
 
+        String token = jwtService.generateToken(savedUser);
 
         RegisterResponse response = new RegisterResponse();
         response.setId(savedUser.getId());
         response.setUsername(savedUser.getUsername());
         response.setEmail(savedUser.getEmail());
+        response.setToken(token);
 
         return response;
     }
+
     public LoginResponse login(LoginRequest request) {
 
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        request.getEmail(),
+                        request.getPassword()
+                )
+        );
+
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new IllegalArgumentException("Invalid email or password"));
+                .orElseThrow(() -> new IllegalArgumentException("Invalid email"));
 
-        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new IllegalArgumentException("Invalid email or password");
-        }
-
-        String token = jwtService.generateToken(user.getEmail());
+        String token = jwtService.generateToken(user);
 
         return new LoginResponse(token);
     }
 
+
+    public ProfileResponse getLoggedUser(HttpServletRequest req) {
+
+        String token = jwtService.extractToken(req);
+        String email = jwtService.extractUsername(token);
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        Profile profile = profileRepository.findByUserId(user.getId())
+                .orElseThrow(() -> new IllegalArgumentException("Profile not found"));
+
+        ProfileResponse res = new ProfileResponse();
+        res.setId(user.getId());
+        res.setDisplayName(profile.getDisplayName());
+        res.setBio(profile.getBio());
+        res.setAvatarUrl(profile.getAvatarUrl());
+        res.setSkills(profile.getSkills());
+        res.setLocation(profile.getLocation());
+        res.setRole(user.getRole());
+        System.out.println("Loaded user role = " + user.getRole());
+
+
+        return res;
+    }
 
 }

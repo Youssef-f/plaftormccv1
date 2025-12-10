@@ -13,5 +13,9 @@ public class ProfileResponse {
     private String bio;
     private String avatarUrl;
     private String skills;
+    private String role;
     private String location;
+
+
+
 }

@@ -79,6 +79,10 @@ public class ProfileService {
         dto.setSkills(profile.getSkills());
         dto.setAvatarUrl(profile.getAvatarUrl());
         dto.setLocation(profile.getLocation());
+
+        dto.setRole(profile.getUser().getRole());
+
         return dto;
     }
+
 }

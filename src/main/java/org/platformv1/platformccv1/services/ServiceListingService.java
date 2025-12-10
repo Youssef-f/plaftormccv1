@@ -12,12 +12,14 @@ import org.platformv1.platformccv1.repository.ServiceListingRepository;
 import org.platformv1.platformccv1.repository.UserRepository;
 import org.platformv1.platformccv1.security.JwtService;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.CrossOrigin;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+
 public class ServiceListingService {
 
     private final ServiceListingRepository serviceRepo;
@@ -69,28 +71,28 @@ public class ServiceListingService {
         return toResponse(s);
     }
 
-    public ServiceListingResponse update(Long id, ServiceListingRequest req, HttpServletRequest request) {
+    public ServiceListingResponse update(Long id, ServiceListingRequest req, HttpServletRequest http) {
+        String email = jwtService.extractUsername(jwtService.extractToken(http));
+        User user = userRepo.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
-        Profile owner = getLoggedUserProfile(request);
-
-        ServiceListing s = serviceRepo.findById(id)
+        ServiceListing listing = serviceRepo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Service not found"));
 
-        if (!s.getOwner().getId().equals(owner.getId())) {
-            throw new RuntimeException("Not authorized to edit this service");
+        if (!listing.getOwner().getId().equals(user.getId())) {
+            throw new RuntimeException("Forbidden");
         }
 
-        s.setTitle(req.getTitle());
-        s.setDescription(req.getDescription());
-        s.setPrice(req.getPrice());
-        s.setTags(req.getTags());
-        s.setDeliveryTime(req.getDeliveryTime());
+        listing.setTitle(req.getTitle());
+        listing.setDescription(req.getDescription());
+        listing.setTags(req.getTags());
+        listing.setPrice(req.getPrice());
 
-        return toResponse(serviceRepo.save(s));
+        return toResponse(serviceRepo.save(listing));
+
     }
 
     public void delete(Long id, HttpServletRequest request) {
-
         Profile owner = getLoggedUserProfile(request);
 
         ServiceListing s = serviceRepo.findById(id)
