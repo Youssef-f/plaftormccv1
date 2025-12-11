@@ -24,6 +24,7 @@ public class Profile {
     private String avatarUrl;
     private String skills;
     private String location;
+    private boolean verified = false;
 
     private LocalDateTime createdAt;
 }

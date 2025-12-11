@@ -25,5 +25,12 @@ public class ServiceListing {
     private String tags;
     private Integer deliveryTime;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private ServiceStatus status = ServiceStatus.PENDING_REVIEW;
+
+    @Column(nullable = false)
+    private long viewsCount = 0L;
+
     private LocalDateTime createdAt;
 }

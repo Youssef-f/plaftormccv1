@@ -1,6 +1,7 @@
 package org.platformv1.platformccv1.repository;
 
 import org.platformv1.platformccv1.entity.ServiceListing;
+import org.platformv1.platformccv1.entity.ServiceStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.LocalDateTime;
@@ -17,6 +18,10 @@ public interface ServiceListingRepository extends JpaRepository<ServiceListing, 
     long countByOwnerId(Long ownerId);
 
     void deleteAllByOwnerId(Long ownerId);
+    long countByStatus(ServiceStatus status);
+
+    List<ServiceListing> findByStatus(ServiceStatus status);
+
 
 
 }

@@ -6,6 +6,7 @@ import org.platformv1.platformccv1.dto.ServiceListingRequest;
 import org.platformv1.platformccv1.dto.ServiceListingResponse;
 import org.platformv1.platformccv1.entity.Profile;
 import org.platformv1.platformccv1.entity.ServiceListing;
+import org.platformv1.platformccv1.entity.ServiceStatus;
 import org.platformv1.platformccv1.entity.User;
 import org.platformv1.platformccv1.repository.ProfileRepository;
 import org.platformv1.platformccv1.repository.ServiceListingRepository;
@@ -41,9 +42,10 @@ public class ServiceListingService {
         return profileRepo.findByUserId(user.getId())
                 .orElseThrow(() -> new RuntimeException("Profile not found"));
     }
-
+    public List<ServiceListing> getByStatus(String status) {
+        return serviceRepo.findByStatus(ServiceStatus.valueOf(status));
+    }
     public ServiceListingResponse create(ServiceListingRequest req, HttpServletRequest request) {
-
         Profile owner = getLoggedUserProfile(request);
 
         ServiceListing s = new ServiceListing();
@@ -54,6 +56,9 @@ public class ServiceListingService {
         s.setTags(req.getTags());
         s.setDeliveryTime(req.getDeliveryTime());
         s.setCreatedAt(LocalDateTime.now());
+
+        s.setStatus(ServiceStatus.PENDING_REVIEW);  // NEW
+        s.setViewsCount(0L);                        // NEW
 
         ServiceListing saved = serviceRepo.save(s);
         return toResponse(saved);
@@ -104,6 +109,12 @@ public class ServiceListingService {
 
         serviceRepo.delete(s);
     }
+    public void addView(Long id) {
+        ServiceListing s = serviceRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Service not found"));
+        s.setViewsCount(s.getViewsCount() + 1);
+        serviceRepo.save(s);
+    }
 
     private ServiceListingResponse toResponse(ServiceListing s) {
         ServiceListingResponse dto = new ServiceListingResponse();
@@ -115,7 +126,14 @@ public class ServiceListingService {
         dto.setPrice(s.getPrice());
         dto.setTags(s.getTags());
         dto.setDeliveryTime(s.getDeliveryTime());
+
+        dto.setStatus(s.getStatus().name());
+        dto.setViewsCount(s.getViewsCount());
+
         return dto;
+    }
+    public ServiceListingResponse toResponsePublic(ServiceListing s) {
+        return toResponse(s);
     }
 }
 

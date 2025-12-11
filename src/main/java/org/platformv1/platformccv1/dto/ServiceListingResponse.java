@@ -15,4 +15,7 @@ public class ServiceListingResponse {
     private Double price;
     private String tags;
     private Integer deliveryTime;
+
+    private String status;
+    private long viewsCount;
 }
