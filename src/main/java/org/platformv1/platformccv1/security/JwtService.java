@@ -45,7 +45,10 @@ public class JwtService {
             return false;
         }
     }
-
+    public String extractUsernameFromRequest(HttpServletRequest request) {
+        String token = extractToken(request);
+        return extractUsername(token);
+    }
     private Claims extractAllClaims(String token) {
         return Jwts
                 .parserBuilder()

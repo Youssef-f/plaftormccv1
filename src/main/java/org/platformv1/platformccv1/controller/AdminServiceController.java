@@ -18,15 +18,11 @@ public class AdminServiceController {
     private final AdminServiceService adminServiceService;
 
     @GetMapping
-    public ResponseEntity<?> getByStatus(@RequestParam String status) {
+    public ResponseEntity<?> getByStatus(@RequestParam(defaultValue = "PENDING_REVIEW") String status) {
         try {
-            // Convert the incoming string to enum (required for JPA)
             ServiceStatus enumStatus = ServiceStatus.valueOf(status.toUpperCase());
-
-            return ResponseEntity.ok(adminServiceService.getByStatus(String.valueOf(enumStatus)));
-
+            return ResponseEntity.ok(adminServiceService.getByStatus(enumStatus.name()));
         } catch (IllegalArgumentException e) {
-            // User passed an invalid status
             return ResponseEntity.badRequest().body("Invalid status: " + status);
         }
     }
@@ -34,14 +30,14 @@ public class AdminServiceController {
     // PUT /api/admin/services/{id}/approve
     @PutMapping("/{id}/approve")
     public ResponseEntity<?> approve(@PathVariable Long id) {
-        adminServiceService.updateStatus(id, "APPROVED");
+        adminServiceService.updateStatus(id, ServiceStatus.ACTIVE.name());
         return ResponseEntity.ok("Service approved");
     }
 
     // PUT /api/admin/services/{id}/reject
     @PutMapping("/{id}/reject")
     public ResponseEntity<?> reject(@PathVariable Long id) {
-        adminServiceService.updateStatus(id, "REJECTED");
+        adminServiceService.updateStatus(id, ServiceStatus.REJECTED.name());
         return ResponseEntity.ok("Service rejected");
     }
 
