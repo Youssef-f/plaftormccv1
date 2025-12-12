@@ -92,7 +92,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowCredentials(true);
-        config.setAllowedOrigins(List.of("http://localhost:3000","https://plaftormccv1-frontend-4j78908la-sefyus-projects.vercel.app"));
+        config.setAllowedOrigins(List.of("http://localhost:3000","https://plaftormccv1-frontend.vercel.app"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT","PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setExposedHeaders(List.of("Authorization"));
